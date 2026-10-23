@@ -4,6 +4,16 @@ A simple Python card counter for the Quems game (standard 52-card deck).
 
 ## Usage
 
+### Gorgeous GUI
+
+```bash
+python quems_gui.py
+```
+
+Then enter cards and click **Count cards**.
+
+### CLI
+
 ```bash
 python quems_card_counter.py AS 10H QD
 ```
