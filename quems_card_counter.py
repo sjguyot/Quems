@@ -8,10 +8,53 @@ from collections import Counter
 RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 SUITS = ["C", "D", "H", "S"]
 DECK = {f"{rank}{suit}" for suit in SUITS for rank in RANKS}
+NUMERIC_SUIT_MAP = {
+    1: "C",
+    2: "D",
+    3: "H",
+    4: "S",
+}
+NUMERIC_RANK_MAP = {
+    1: "A",
+    2: "2",
+    3: "3",
+    4: "4",
+    5: "5",
+    6: "6",
+    7: "7",
+    8: "8",
+    9: "9",
+    10: "10",
+    11: "J",
+    12: "Q",
+    13: "K",
+}
+
+
+def normalize_numeric_card(value: str) -> str:
+    card = value.strip()
+    payload = card[1:-1]
+    x_value, y_value = [part.strip() for part in payload.split(";", maxsplit=1)]
+
+    try:
+        suit_number = int(x_value)
+        rank_number = int(y_value)
+    except ValueError as exc:
+        raise ValueError(f"Invalid card: {value!r}") from exc
+
+    suit = NUMERIC_SUIT_MAP.get(suit_number)
+    rank = NUMERIC_RANK_MAP.get(rank_number)
+    if suit is None or rank is None:
+        raise ValueError(f"Invalid card: {value!r}")
+
+    return f"{rank}{suit}"
 
 
 def normalize_card(value: str) -> str:
     card = value.strip().upper()
+    if card.startswith("(") and card.endswith(")") and ";" in card:
+        return normalize_numeric_card(value)
+
     if len(card) < 2:
         raise ValueError(f"Invalid card: {value!r}")
 
@@ -51,7 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "cards",
         nargs="*",
-        help="Seen cards in format <rank><suit>, example: AS 10H QD",
+        help="Seen cards in format <rank><suit> or (x;y), example: AS 10H QD (3;12)",
     )
     return parser
 

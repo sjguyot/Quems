@@ -20,6 +20,17 @@ class CountCardsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid card"):
             count_cards(["1X"])
 
+    def test_numeric_card_format_is_supported(self):
+        result = count_cards(["(3;12)", "(1;1)"])
+        self.assertEqual(result["seen_count"], 2)
+        self.assertEqual(result["remaining_count"], 50)
+        self.assertNotIn("QH", result["remaining_cards"])
+        self.assertNotIn("AC", result["remaining_cards"])
+
+    def test_invalid_numeric_card_raises_error(self):
+        with self.assertRaisesRegex(ValueError, "Invalid card"):
+            count_cards(["(5;12)"])
+
 
 if __name__ == "__main__":
     unittest.main()

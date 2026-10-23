@@ -8,6 +8,14 @@ A simple Python card counter for the Quems game (standard 52-card deck).
 python quems_card_counter.py AS 10H QD
 ```
 
+You can also use numeric cards with `(x;y)`:
+- `x` is the suit: `1=clover (C)`, `2=diamond (D)`, `3=heart (H)`, `4=spade (S)`
+- `y` is the rank: `1=Ace`, `2-10=number cards`, `11=Jack`, `12=Queen`, `13=King`
+
+```bash
+python quems_card_counter.py "(3;12)" "(1;1)"
+```
+
 Example output:
 
 ```text
