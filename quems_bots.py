@@ -70,11 +70,49 @@ def simulate_quems_game(bot_count: int, seed: int | None = None) -> dict[str, ob
     }
 
 
+def estimate_bot_win_probability(
+    bot_count: int,
+    target_bot: int,
+    trials: int = 1000,
+    seed: int | None = None,
+) -> dict[str, object]:
+    if bot_count < 2:
+        raise ValueError("bot_count must be at least 2")
+    if target_bot < 1 or target_bot > bot_count:
+        raise ValueError("target_bot must be between 1 and bot_count")
+    if trials < 1:
+        raise ValueError("trials must be at least 1")
+
+    rng = random.Random(seed)
+    target_name = f"Bot {target_bot}"
+    weighted_wins = 0.0
+
+    for _ in range(trials):
+        game_seed = rng.randrange(0, 2**32)
+        game_result = simulate_quems_game(bot_count=bot_count, seed=game_seed)
+        winners = game_result["winners"]
+        if target_name in winners:
+            weighted_wins += 1.0 / len(winners)
+
+    probability = weighted_wins / trials
+    return {
+        "bot_count": bot_count,
+        "target_bot": target_bot,
+        "target_name": target_name,
+        "trials": trials,
+        "seed": seed,
+        "estimated_win_probability": probability,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run Quems bot simulations for testing.")
     parser.add_argument("--bots", type=int, default=4, help="Number of bots (minimum 2).")
     parser.add_argument("--seed", type=int, default=None, help="Random seed for deterministic results.")
     parser.add_argument("--show-rounds", action="store_true", help="Display each simulated round.")
+    parser.add_argument("--estimate", action="store_true", help="Estimate win probability instead of one game.")
+    parser.add_argument("--target-bot", type=int, default=1, help="Bot index to evaluate in estimate mode.")
+    parser.add_argument("--trials", type=int, default=1000, help="Number of Monte Carlo trials in estimate mode.")
     return parser
 
 
@@ -83,25 +121,40 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        result = simulate_quems_game(args.bots, args.seed)
+        if args.estimate:
+            result = estimate_bot_win_probability(
+                bot_count=args.bots,
+                target_bot=args.target_bot,
+                trials=args.trials,
+                seed=args.seed,
+            )
+        else:
+            result = simulate_quems_game(args.bots, args.seed)
     except ValueError as error:
         parser.error(str(error))
 
-    print(f"Bots: {result['bot_count']}")
-    print(f"Seed: {result['seed']}")
-    print("Scores:")
-    for bot_name in sorted(result["scores"]):
-        print(f"  {bot_name}: {result['scores'][bot_name]}")
+    if args.estimate:
+        print(f"Bots: {result['bot_count']}")
+        print(f"Seed: {result['seed']}")
+        print(f"Target bot: {result['target_name']}")
+        print(f"Trials: {result['trials']}")
+        print(f"Estimated win probability: {result['estimated_win_probability']:.4f}")
+    else:
+        print(f"Bots: {result['bot_count']}")
+        print(f"Seed: {result['seed']}")
+        print("Scores:")
+        for bot_name in sorted(result["scores"]):
+            print(f"  {bot_name}: {result['scores'][bot_name]}")
 
-    print(f"Winners: {', '.join(result['winners'])}")
-    if args.show_rounds:
-        print("Rounds:")
-        for round_info in result["rounds"]:
-            plays = ", ".join(f"{name}={card}" for name, card in sorted(round_info["plays"].items()))
-            print(
-                f"  R{round_info['round']:02d}: {plays} -> {round_info['winner']} "
-                f"(seen={round_info['seen_count']}, remaining={round_info['remaining_count']})"
-            )
+        print(f"Winners: {', '.join(result['winners'])}")
+        if args.show_rounds:
+            print("Rounds:")
+            for round_info in result["rounds"]:
+                plays = ", ".join(f"{name}={card}" for name, card in sorted(round_info["plays"].items()))
+                print(
+                    f"  R{round_info['round']:02d}: {plays} -> {round_info['winner']} "
+                    f"(seen={round_info['seen_count']}, remaining={round_info['remaining_count']})"
+                )
 
     return 0
 

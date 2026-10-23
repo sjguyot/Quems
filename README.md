@@ -26,6 +26,12 @@ Run bots that play a full deck while validating card counts during play:
 python quems_bots.py --bots 4 --seed 42 --show-rounds
 ```
 
+Estimate when a bot can win without knowing opponents' cards:
+
+```bash
+python quems_bots.py --estimate --bots 4 --target-bot 1 --trials 5000 --seed 42
+```
+
 You can also use numeric cards with `(x;y)`:
 - `x` is the suit: `1=clover (C)`, `2=diamond (D)`, `3=heart (H)`, `4=spade (S)`
 - `y` is the rank: `1=Ace`, `2-10=number cards`, `11=Jack`, `12=Queen`, `13=King`
